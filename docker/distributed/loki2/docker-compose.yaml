@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  loki-distributor:
+    image: grafana/loki:2.2.1
+    container_name: loki-distributor
+    ports:
+      - "3100:3100"
+      - "9096:9096"
+    depends_on:
+      - loki-ingester
+    volumes:
+      - ./distributor/loki-config.yaml:/etc/loki/config.yaml
+    command: -config.file=/etc/loki/config.yaml -target=distributor
+    networks:
+      - lokidemo
+
+  loki-ingester:
+    image: grafana/loki:2.2.1
+    container_name: loki-ingester
+    ports:
+      - "3101:3101"
+      - "9097:9097"
+    volumes:
+      - ./ingester/loki-config.yaml:/etc/loki/config.yaml
+    command: -config.file=/etc/loki/config.yaml -target=ingester
+    networks:
+      - lokidemo
+
+  loki-querier:
+    image: grafana/loki:2.2.1
+    container_name: loki-querier
+    ports:
+      - "3102:3102"
+      - "9098:9098"
+    depends_on:
+      - loki-ingester
+      - loki-distributor
+    volumes:
+      - ./querier/loki-config.yaml:/etc/loki/config.yaml
+    command: -config.file=/etc/loki/config.yaml -target=querier
+    networks:
+      - lokidemo
+
+  loki-table-manager:
+    image: grafana/loki:2.2.1
+    container_name: loki-table-manager
+    ports:
+      - 3100
+      - 9096
+    volumes:
+      - ./table-manager/loki-config.yaml:/etc/loki/config.yaml
+    command: -config.file=/etc/loki/config.yaml -target=table-manager
+    networks:
+      - lokidemo
+
+networks:
+  lokidemo: {}

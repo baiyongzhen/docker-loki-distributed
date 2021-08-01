@@ -1,0 +1,40 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+
+schema_config:
+  configs:
+    - from: 2020-07-31
+      store: boltdb-shipper
+      object_store: s3
+      schema: v11
+      index:
+        prefix: loki_
+        period: 24h
+
+storage_config:
+  aws:
+    s3: s3://697d0993dd097f38d5b8:9f88738761b57c63f6a81bdfd471@192.168.56.180:9000/loki
+    s3forcepathstyle: true
+
+  boltdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/index_cache
+    resync_interval: 5s
+    shared_store: s3
+
+table_manager:
+  chunk_tables_provisioning:
+    inactive_read_throughput: 1
+    inactive_write_throughput: 1
+    provisioned_read_throughput: 5
+    provisioned_write_throughput: 5
+  index_tables_provisioning:
+    inactive_read_throughput: 1
+    inactive_write_throughput: 1
+    provisioned_read_throughput: 5
+    provisioned_write_throughput: 5
+  retention_deletes_enabled: false
+  retention_period: 0s
