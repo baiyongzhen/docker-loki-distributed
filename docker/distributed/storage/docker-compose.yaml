@@ -1,0 +1,82 @@
+version: '3'
+
+services:
+  consul:
+    image: consul:1.9
+    container_name: consul
+    ports:
+      - "8500:8500"
+    command: agent -log-level=info -dev -ui -client 0.0.0.0
+    volumes:
+      - ./storage/consul/config:/consul/config
+      - ./storage/consul/data:/consul/data
+    logging:
+      driver: loki
+      options:
+        loki-url: http://192.168.56.181:3102/loki/api/v1/push
+        loki-external-labels: job=dockerlogs,environment=consul
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    entrypoint: sh
+    command: -c 'mkdir -p /export/loki && /usr/bin/minio server --console-address :9001 /export'
+    environment:
+      - MINIO_ACCESS_KEY=697d0993dd097f38d5b8
+      - MINIO_SECRET_KEY=9f88738761b57c63f6a81bdfd471
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./storage/minio:/export
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    logging:
+      driver: loki
+      options:
+        loki-url: http://192.168.56.182:3102/loki/api/v1/push
+        loki-external-labels: job=dockerlogs,environment=minio
+
+  redis:
+    image: bitnami/redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./storage/data:/data
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    logging:
+      driver: loki
+      options:
+        loki-url: http://192.168.56.183:3102/loki/api/v1/push
+        loki-external-labels: job=dockerlogs,environment=redis
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+
+  promtail:
+    image: grafana/promtail:2.2.1
+    ports:
+      - "9080:9080"
+    volumes:
+      - ./conf:/etc/promtail
+      - /var/log:/var/log
+    command: -config.file=/etc/promtail/promtail-config.yaml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
