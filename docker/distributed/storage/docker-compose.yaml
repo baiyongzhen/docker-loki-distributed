@@ -13,7 +13,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: http://192.168.56.181:3102/loki/api/v1/push
+        loki-url: http://192.168.56.181:3100/loki/api/v1/push
         loki-external-labels: job=dockerlogs,environment=consul
 
   minio:
@@ -37,7 +37,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: http://192.168.56.182:3102/loki/api/v1/push
+        loki-url: http://192.168.56.182:3100/loki/api/v1/push
         loki-external-labels: job=dockerlogs,environment=minio
 
   redis:
@@ -52,7 +52,7 @@ services:
     logging:
       driver: loki
       options:
-        loki-url: http://192.168.56.183:3102/loki/api/v1/push
+        loki-url: http://192.168.56.183:3100/loki/api/v1/push
         loki-external-labels: job=dockerlogs,environment=redis
 
   redis-commander:
